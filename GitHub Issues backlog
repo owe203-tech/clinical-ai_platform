@@ -1,0 +1,14 @@
+Set up dataset pipeline
+Implement ResNet-18 baseline
+Build model evaluation pipeline
+Create FastAPI inference API
+Build Streamlit interface
+Add automated tests
+Add inference database
+Containerize application
+Set up GitHub Actions
+Deploy V1
+Implement modern vision encoder
+Implement clinical text encoder
+Build multimodal fusion model
+Evaluate calibration and uncertainty
