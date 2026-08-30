@@ -11,10 +11,14 @@ venv/
 data/*
 !data/.gitkeep
 
-# Model weights
-*.pth
+# Model checkpoints
 *.pt
+*.pth
 *.ckpt
+checkpoints/
+
+# Large intermediate prediction files
+results/*predictions.csv
 
 # Secrets
 .env

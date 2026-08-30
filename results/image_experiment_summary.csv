@@ -1,0 +1,4 @@
+model,best_val_auroc,pr_auc,selected_threshold,sensitivity,specificity,precision,f1
+unweighted_finetuned_resnet18,0.8811,0.3944,0.06,0.755,0.872,0.356,0.484
+weighted_finetuned_resnet18,0.8668,0.3871,0.49,0.776,0.807,0.273,0.404
+regularized_finetuned_resnet18,0.857,,,,,,
