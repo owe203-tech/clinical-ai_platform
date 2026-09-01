@@ -1,0 +1,27 @@
+flowchart TD
+
+    A["IU / Open-I Dataset<br/>Chest X-rays + XML Reports"]
+
+    B["Dataset Construction<br/>Frontal-view filtering<br/>Cardiomegaly labels<br/>Report-level deduplication"]
+
+    C["Leakage-Aware Split<br/>Train / Validation / Test<br/>Grouped by report_id"]
+
+    A --> B
+    B --> C
+
+    C --> D["Frontal Chest X-ray"]
+    C --> E["Clinical Indication<br/>(Pre-imaging text)"]
+
+    D --> F["Pretrained ResNet-18<br/>Fine-tune layer4 + fc"]
+    F --> G["Image Probability"]
+
+    E --> H["TF-IDF<br/>Unigrams + Bigrams"]
+    H --> I["Logistic Regression"]
+    I --> J["Text Probability"]
+
+    G --> K["Late Fusion<br/>0.80 × Image + 0.20 × Text"]
+    J --> K
+
+    K --> L["Cardiomegaly Risk Probability"]
+
+    L --> M["Untouched Test Evaluation<br/>AUROC • PR-AUC<br/>Calibration • Failure Analysis"]
