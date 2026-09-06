@@ -24,3 +24,9 @@ results/*predictions.csv
 .env
 
 *.joblib
+
+# Generated model artifacts
+artifacts/
+
+# Test/cache files
+.pytest_cache/
