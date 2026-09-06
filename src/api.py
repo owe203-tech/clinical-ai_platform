@@ -2,6 +2,8 @@ from functools import lru_cache
 from pathlib import Path
 import shutil
 import tempfile
+import logging
+import time
 
 from fastapi import (
     Depends,
@@ -20,6 +22,31 @@ app = FastAPI(
     title="Clinical AI Cardiomegaly API",
     version="0.1.0",
 )
+
+logger = logging.getLogger("clinical_ai_api")
+logger.setLevel(logging.INFO)
+
+
+@app.middleware("http")
+async def log_requests(request, call_next):
+    start = time.perf_counter()
+    status_code = 500
+
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        duration_ms = (time.perf_counter() - start) * 1000
+
+        logger.info(
+            "request method=%s path=%s status=%s duration_ms=%.2f",
+            request.method,
+            request.url.path,
+            status_code,
+            duration_ms,
+        )
+
 
 ALLOWED_CONTENT_TYPES = {
     "image/png",
