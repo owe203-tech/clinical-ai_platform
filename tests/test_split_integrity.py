@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 
@@ -13,6 +12,8 @@ if not MANIFEST_PATH.exists():
         "Local model manifest not available.",
         allow_module_level=True,
     )
+
+import pandas as pd
 
 def load_manifest():
     assert MANIFEST_PATH.exists(), (
