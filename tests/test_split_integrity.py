@@ -1,11 +1,18 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
+
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = PROJECT_ROOT / "data" / "processed" / "model_manifest.csv"
 
+if not MANIFEST_PATH.exists():
+    pytest.skip(
+        "Local model manifest not available.",
+        allow_module_level=True,
+    )
 
 def load_manifest():
     assert MANIFEST_PATH.exists(), (
