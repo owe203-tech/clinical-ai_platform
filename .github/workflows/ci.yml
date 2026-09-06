@@ -57,7 +57,7 @@ jobs:
       ECR_REPOSITORY: clinical-ai-api
       ECS_CLUSTER: clinical-ai-cluster
       ECS_SERVICE: clinical-ai-service
-      ARTIFACT_BUCKET: YOUR_ARTIFACT_BUCKET
+      ARTIFACT_BUCKET: omar-clinical-ai-model-artifacts-2026
 
     steps:
       - name: Checkout repository
@@ -75,15 +75,15 @@ jobs:
           mkdir -p artifacts
 
           aws s3 cp \
-            "s3://${ARTIFACT_BUCKET}/best_resnet18_finetuned_cardiomegaly.pt" \
+            "s3://${omar-clinical-ai-model-artifacts-2026}/best_resnet18_finetuned_cardiomegaly.pt" \
             "./best_resnet18_finetuned_cardiomegaly.pt"
 
           aws s3 cp \
-            "s3://${ARTIFACT_BUCKET}/tfidf_vectorizer.joblib" \
+            "s3://${omar-clinical-ai-model-artifacts-2026}/tfidf_vectorizer.joblib" \
             "./artifacts/tfidf_vectorizer.joblib"
 
           aws s3 cp \
-            "s3://${ARTIFACT_BUCKET}/text_classifier.joblib" \
+            "s3://${omar-clinical-ai-model-artifacts-2026}/text_classifier.joblib" \
             "./artifacts/text_classifier.joblib"
 
       - name: Login to Amazon ECR
