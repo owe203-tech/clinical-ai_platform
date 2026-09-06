@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import joblib
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -10,9 +11,11 @@ from sklearn.metrics import (
 )
 
 
+
 # -----------------------------
 # Paths
 # -----------------------------
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = (
@@ -146,11 +149,6 @@ print("\nIndication-only TF-IDF baseline")
 print(f"Validation AUROC: {val_auc:.4f}")
 print(f"Validation PR-AUC: {val_pr_auc:.4f}")
 
-MANIFEST_PATH = Path(
-    "data/processed/model_manifest.csv"
-)
-
-df = pd.read_csv(MANIFEST_PATH)
 
 frontal_counts = (
     df.groupby("report_id")
@@ -169,16 +167,9 @@ print(
     (frontal_counts > 1).mean() * 100
 )
 
-image_pred_df = pd.DataFrame({
-    "report_id": val_df["report_id"].values,
-    "image_prob": val_probs
-})
 
-report_image_probs = (
-    image_pred_df
-    .groupby("report_id", as_index=False)["image_prob"]
-    .mean()
-)
+
+
 val_probs = model.predict_proba(X_val)[:, 1]
 
 train_probs = model.predict_proba(
@@ -215,7 +206,6 @@ text_pred_df.to_csv(
 print("Saved validation text predictions.")
 
 
-
 train_text_pred_df = pd.DataFrame({
     "report_id": train_df["report_id"].values,
     "text_prob": train_probs,
@@ -226,4 +216,22 @@ train_text_pred_df.to_csv(
     "results/train_text_predictions.csv",
     index=False,
 )
+# -----------------------------
+# Save fitted text artifacts
+# -----------------------------
+
+ARTIFACT_DIR = PROJECT_ROOT / "artifacts"
+ARTIFACT_DIR.mkdir(exist_ok=True)
+
+joblib.dump(
+    vectorizer,
+    ARTIFACT_DIR / "tfidf_vectorizer.joblib",
+)
+
+joblib.dump(
+    model,
+    ARTIFACT_DIR / "text_classifier.joblib",
+)
+
+print("Saved fitted text artifacts.")
 
