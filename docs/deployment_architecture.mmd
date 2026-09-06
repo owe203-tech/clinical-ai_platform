@@ -1,0 +1,54 @@
+flowchart TD
+
+    DEV["Developer<br/>Local repository"]
+
+    GH["GitHub<br/>main branch"]
+
+    CI["GitHub Actions<br/>CI/CD pipeline"]
+
+    OIDC["GitHub OIDC<br/>Temporary AWS credentials"]
+
+    S3["Amazon S3<br/>Private model artifacts"]
+
+    BUILD["Docker Buildx<br/>Linux ARM64 image"]
+
+    ECR["Amazon ECR<br/>Container registry"]
+
+    ECS["Amazon ECS / Fargate<br/>clinical-ai-service"]
+
+    API["FastAPI Inference Service<br/>Port 8000"]
+
+    MODEL["Multimodal Predictor<br/>ResNet-18 + TF-IDF/LR<br/>80/20 late fusion"]
+
+    CW["Amazon CloudWatch<br/>Logs + CPU/Memory monitoring"]
+
+    CLIENT["API Client"]
+
+    DEV -->|git push| GH
+
+    GH --> CI
+
+    CI -->|tests pass| OIDC
+
+    OIDC -->|assume IAM role| S3
+
+    S3 -->|download model artifacts| BUILD
+
+    CI --> BUILD
+
+    BUILD -->|push Docker image| ECR
+
+    ECR -->|deploy image| ECS
+
+    ECS --> API
+
+    API --> MODEL
+
+    CLIENT -->|GET /health| API
+    CLIENT -->|POST /predict| API
+
+    API -->|JSON probabilities| CLIENT
+
+    ECS -->|container logs| CW
+    API -->|request status + latency| CW
+    ECS -->|CPU + memory metrics| CW
