@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -11,12 +11,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
@@ -35,3 +38,87 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+
+  deploy:
+    needs: test
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      AWS_REGION: eu-central-1
+      AWS_ACCOUNT_ID: "421247849819"
+      ECR_REPOSITORY: clinical-ai-api
+      ECS_CLUSTER: clinical-ai-cluster
+      ECS_SERVICE: clinical-ai-service
+      ARTIFACT_BUCKET: YOUR_ARTIFACT_BUCKET
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::421247849819:role/GitHubActionsClinicalAI
+          aws-region: ${{ env.AWS_REGION }}
+          allowed-account-ids: "421247849819"
+
+      - name: Download model artifacts
+        run: |
+          mkdir -p artifacts
+
+          aws s3 cp \
+            "s3://${ARTIFACT_BUCKET}/best_resnet18_finetuned_cardiomegaly.pt" \
+            "./best_resnet18_finetuned_cardiomegaly.pt"
+
+          aws s3 cp \
+            "s3://${ARTIFACT_BUCKET}/tfidf_vectorizer.joblib" \
+            "./artifacts/tfidf_vectorizer.joblib"
+
+          aws s3 cp \
+            "s3://${ARTIFACT_BUCKET}/text_classifier.joblib" \
+            "./artifacts/text_classifier.joblib"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push ARM64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy new image to ECS
+        run: |
+          aws ecs update-service \
+            --cluster "${ECS_CLUSTER}" \
+            --service "${ECS_SERVICE}" \
+            --force-new-deployment \
+            --region "${AWS_REGION}"
+
+      - name: Wait for ECS deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster "${ECS_CLUSTER}" \
+            --services "${ECS_SERVICE}" \
+            --region "${AWS_REGION}"
