@@ -23,8 +23,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-logger = logging.getLogger("clinical_ai_api")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger("uvicorn.error")
 
 
 @app.middleware("http")
